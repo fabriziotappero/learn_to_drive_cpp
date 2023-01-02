@@ -4,7 +4,7 @@
 //#define OLC_IMAGE_STB
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
-// #include "extensions/olcPGEX_Graphics2D.h"
+#include "extensions/olcPGEX_Graphics2D.h"
 
 // Override base class with your custom functionality
 class Example : public olc::PixelGameEngine
