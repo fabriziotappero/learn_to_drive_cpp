@@ -12,7 +12,7 @@ Install g++ (in Windows you can use MSYS2) and run:
     g++ -o main.exe main.cpp -O2 -s -DNDEBUG -luser32 -lgdi32 -lopengl32 -lgdiplus -lShlwapi -ldwmapi -lstdc++fs -static -std=c++17
 
  # What it does
-You give it a race circuit (as an PNG image) and you let the car run how to drive. After a cetain amount of iteration the car will be able to drive al maximum speed around the circuit!
+You give it a race circuit (as an PNG image) and you let the car learn how to drive. After a cetain amount of iterations the car will be able to drive al maximum speed around the circuit!
  
  As you might have noticed from the code, it uses the great open-source **Pixel Game Engine** by olc. Have a look here for into and documentation:
  
