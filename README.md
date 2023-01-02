@@ -1,6 +1,6 @@
 
 # What is this? 
-A C++ implementation of an **artificial intelligence** that can drive.
+A C++ implementation of an **artificial intelligence** that can drive at unbelievable speed on *any* given circuit!
 
 <p align="center">
   <img src="https://github.com/fabriziotappero/Learn_To_Drive_CPP/blob/main/assets/circuit_3.png?raw=true" width = "50%" alt="" align=center/>
