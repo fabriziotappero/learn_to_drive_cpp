@@ -3,7 +3,7 @@
 A C++ implementation of an **artificial intelligence** that can drive.
 
 <p align="center">
-  <img src="https://github.com/fabriziotappero/Learn_To_Drive_CPP/blob/master/assets/circuit_3.png?raw=true" width = "50%" alt="" align=center/>
+  <img src="https://github.com/fabriziotappero/Learn_To_Drive_CPP/blob/main/assets/circuit_3.png?raw=true" width = "50%" alt="" align=center/>
 </p>
 
 # How to compile
