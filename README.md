@@ -24,6 +24,16 @@ You give it a race circuit (as an PNG image) and you let the car learn how to dr
  
  Regarding AI, on the web you can find a lot of implementations made in Python but not so many made in C++.
  
+ # What I have learnt
+ - How to draw stuff on a screen, meaning, how to use a simple graphical game engine. This is one step above GUI development where frame rate and code 
+ efficiency are your constant worry.
+ - How to structure a series of C++ classes and functions so that you can integrate a well established software tool (in this case the Game Engine tool) 
+ in your own development. This is a particular important skill since a lot of coding that you end up doing is via the use of tools, API or software that 
+ others have built.
+ - How to implement from scratch an AI in C++. Learn the ins and outs of reinforced learning and the importance of input data.
+ - How to deal with C++ Standard Library tools instead of writing up your own.
+ 
+ 
  # Reach out
  If you want to know more:
  
