@@ -4,28 +4,40 @@
 //#define OLC_IMAGE_STB
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
-#include "extensions/olcPGEX_Graphics2D.h"
+#include <memory>
+//#include "extensions/olcPGEX_Graphics2D.h"
 
 // Override base class with your custom functionality
-class Example : public olc::PixelGameEngine
+class Race : public olc::PixelGameEngine
 {
 public:
 
   // circuit parameters
-  std::unique_ptr<olc::Sprite> sprCircuit = std::make_unique<olc::Sprite>("./assets/circuit_4.png");
-  olc::vi2d vCircuitSize = { 1000,1000 };
+  //std::unique_ptr<olc::Sprite> sprCircuit = std::make_unique<olc::Sprite>("./assets/circuit_4.png");
+  //olc::vi2d vCircuitSize = { 1000,1000 };
 
   // car parameters definition
-  std::unique_ptr<olc::Sprite> sprCar = std::make_unique<olc::Sprite>("./assets/car.png");
+  //std::unique_ptr<olc::Sprite> sprCar = std::make_unique<olc::Sprite>("./assets/car.png");
+  //std::unique_ptr<olc::Decal> decCar  = std::make_unique<olc::Decal>(sprCar.get());
+
+  // circuit and car sprites
+  std::unique_ptr<olc::Sprite> sprCircuit;
+	std::unique_ptr<olc::Sprite> sprCar;
+	std::unique_ptr<olc::Decal> decCar;
+
+  // car and circuit parameters
+  olc::vi2d vCircuitSize = { 1000,1000 };
   olc::vi2d vCarSize = { 1,1 };
-  olc::vi2d vCarPos = { 0,0 };
-  float carSpeed = 0.0f;
-  float carDirection = 0.0f;
+  olc::vf2d vCarPos = { 190,85 };               // 2D car position
+  olc::vf2d vCarDir   = olc::vf2d(0.0f, 0.0f);  // 2D car direction
+	olc::vf2d vCarSpeed = olc::vf2d(0.0f, 0.0f);  // 2D car speed
+  float fCarSpeedLin = 0.0f;                    // Linear car speed
+  float fCarDirection = 0.0f;                   // Direction of the car
 
   // text info
   std::string info = "none";
 
-	Example()
+	Race()
 	{
 		// Name your application
 		sAppName = "AI Learn to Drive";
@@ -34,42 +46,67 @@ public:
 public:
 	bool OnUserCreate() override
 	{
-		// Called once at the start
-    SetPixelMode(olc::Pixel::MASK); // preserve transparency
-  
+
+    // Load circuit and car sprites
+		sprCircuit = std::make_unique<olc::Sprite>("./assets/circuit_4.png");
+    sprCar = std::make_unique<olc::Sprite>("./assets/car.png");
+    decCar = std::make_unique<olc::Decal>(sprCar.get()); // car is actually a decal handled by GPU
+
+    // draw race circuit as a sprite
+    DrawSprite(olc::vi2d(0, 0) * vCircuitSize, sprCircuit.get());
+
+    //SetPixelMode(olc::Pixel::MASK); // Dont draw pixels which have any transparency
+    //SetPixelMode(olc::Pixel::NORMAL); // Draw all pixels
+    //Clear(olc::WHITE);
+
 		return true;
 	}
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-    // load circuit
-    DrawSprite(olc::vi2d(0, 0) * vCircuitSize, sprCircuit.get());
 
-    // load car
-    DrawSprite(olc::vi2d(vCarPos.x, vCarPos.y) * vCarSize, sprCar.get());
-    // you need to rotate the car accordingly. See:
-    https://community.onelonecoder.com/2020/01/18/new-pixelgameengine-extension-for-animating-2d-sprites/
-
-    // set car to mouse pointer position
-    if (GetMouse(0).bHeld)
+    // get some keyboard inputs
+    if (1)
     {
-      vCarPos.x = float(GetMouseX())/1.0f;
-      vCarPos.y = float(GetMouseY()/1.0f);
+      // change car direction and speed linearly
+      if (GetKey(olc::Key::LEFT).bHeld) fCarDirection  +=  1.1f * fElapsedTime;
+      if (GetKey(olc::Key::RIGHT).bHeld) fCarDirection -=  1.1f * fElapsedTime;
+
+      if (GetKey(olc::Key::UP).bHeld) fCarSpeedLin    +=  30.0f * fElapsedTime;
+      if (GetKey(olc::Key::DOWN).bHeld) fCarSpeedLin  -=  30.0f * fElapsedTime;
+
+      // override car position using mouse pointer
+      if (GetMouse(0).bHeld)
+      {
+        vCarPos.x = float(GetMouseX())/1.0f;
+        vCarPos.y = float(GetMouseY())/1.0f;
+      }
     }
 
-    //increment car speed
-    if (GetMouseWheel() > 0) carSpeed += 0.5f;
-		if (GetMouseWheel() < 0) carSpeed -= 0.5f;
-    vCarPos.x += carSpeed;
-    //vCarPos.y += carSpeed;
+    // Update car physics
+    vCarSpeed = { fCarSpeedLin * cos(fCarDirection), fCarSpeedLin * sin(fCarDirection) }; // Convert linear speed to 2D speed
+    vCarPos += vCarSpeed * fElapsedTime;
 
-    // change car direction
-    if (GetKey(olc::Key::LEFT).bHeld) carDirection += 0.5f;
-    if (GetKey(olc::Key::RIGHT).bHeld) carDirection -= 0.5f;
-    
+    //  Calculate Collision
+    // TODO
+
+    // Measure car-border distances
+    // TODO
+
+    // AI driving
+    // TODO
+
+    // Draw screen
+    DrawRotatedDecal(vCarPos * vCarSize, decCar.get() , fCarDirection, { 80, 54/2 }, { 1, 1 }, olc::WHITE);
+
     // print some data
-    info = "POS:(" + std::to_string(vCarPos.x) + "," + std::to_string(vCarPos.y) + "), DIR:" + std::to_string(carDirection);
-		DrawString(5, ScreenHeight()-17, info, olc::BLACK, 2);
+    info = "POS:(" + std::to_string(int(vCarPos.x)) + "," + std::to_string(int(vCarPos.y)) +
+                                                  "),DIR:" + std::to_string(fCarDirection) +
+                                             ",SPEED:" + std::to_string(int(fCarSpeedLin)) + 
+                                           ",FPS:" + std::to_string(int(1/fElapsedTime));
+
+    FillRect(0, ScreenHeight()-21, ScreenWidth(), 21, olc::BLACK);
+		DrawString(5, ScreenHeight()-17, info, olc::WHITE, 2);
     
 		return true;
 	}
@@ -77,7 +114,7 @@ public:
 
 int main()
 {
-	Example demo;
+	Race demo;
 	if (demo.Construct(1000, 1000, 1, 1))
 		demo.Start();
 	return 0;
