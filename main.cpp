@@ -4,21 +4,11 @@
 //#define OLC_IMAGE_STB
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
-#include <memory>
-//#include "extensions/olcPGEX_Graphics2D.h"
 
 // Override base class with your custom functionality
 class Race : public olc::PixelGameEngine
 {
 public:
-
-  // circuit parameters
-  //std::unique_ptr<olc::Sprite> sprCircuit = std::make_unique<olc::Sprite>("./assets/circuit_4.png");
-  //olc::vi2d vCircuitSize = { 1000,1000 };
-
-  // car parameters definition
-  //std::unique_ptr<olc::Sprite> sprCar = std::make_unique<olc::Sprite>("./assets/car.png");
-  //std::unique_ptr<olc::Decal> decCar  = std::make_unique<olc::Decal>(sprCar.get());
 
   // circuit and car sprites
   std::unique_ptr<olc::Sprite> sprCircuit;
@@ -26,6 +16,7 @@ public:
 	std::unique_ptr<olc::Decal> decCar;
 
   // car and circuit parameters
+  olc::Pixel pCircuitPixel;
   olc::vi2d vCircuitSize = { 1000,1000 };
   olc::vi2d vCarSize = { 1,1 };
   olc::vf2d vCarPos = { 190,85 };               // 2D car position
@@ -87,8 +78,27 @@ public:
     vCarSpeed = { fCarSpeedLin * cos(fCarDirection), fCarSpeedLin * sin(fCarDirection) }; // Convert linear speed to 2D speed
     vCarPos += vCarSpeed * fElapsedTime;
 
-    //  Calculate Collision
-    // TODO
+    // Draw car
+    DrawRotatedDecal(vCarPos * vCarSize, decCar.get() , fCarDirection, { 80, 54/2 }, { 1, 1 }, olc::WHITE);
+
+    // Limit car motion
+    if (vCarPos.x + 20 > ScreenWidth())  vCarPos.x = ScreenWidth()  - 20;
+    if (vCarPos.y + 40 > ScreenHeight()) vCarPos.y = ScreenHeight() - 40;
+    if (vCarPos.x - 20 < 0)  vCarPos.x = 0  + 20;
+    if (vCarPos.y - 20 < 0)  vCarPos.y = 0  + 20;
+    
+    //  Calculate Collision WIP
+    FillCircle(vCarPos.x, vCarPos.y, 4, olc::GREY); // car pivoting point
+    // lines that define car visibility (a kind of lidar)
+    DrawLine(vCarPos, {int(vCarPos.x+(500*cos(fCarDirection))),int(vCarPos.y+(500*sin(fCarDirection)))}, olc::GREY);
+    DrawLine(vCarPos, {int(vCarPos.x+(500*cos(fCarDirection+0.2))),int(vCarPos.y+(500*sin(fCarDirection+0.2)))}, olc::GREY);
+    DrawLine(vCarPos, {int(vCarPos.x+(500*cos(fCarDirection-0.2))),int(vCarPos.y+(500*sin(fCarDirection-0.2)))}, olc::GREY);
+    DrawLine(vCarPos, {int(vCarPos.x+(500*cos(fCarDirection+0.5))),int(vCarPos.y+(500*sin(fCarDirection+0.5)))}, olc::GREY);
+    DrawLine(vCarPos, {int(vCarPos.x+(500*cos(fCarDirection-0.5))),int(vCarPos.y+(500*sin(fCarDirection-0.5)))}, olc::GREY);
+    
+    // read Circuit Sprite pixel colour
+    pCircuitPixel = sprCircuit->GetPixel(GetMouseX(),GetMouseY());
+    std::cout << "Pixel: " << std::to_string(pCircuitPixel.r) << " " << std::to_string(pCircuitPixel.g) << " " << std::to_string(pCircuitPixel.b) << "\n";
 
     // Measure car-border distances
     // TODO
@@ -96,18 +106,16 @@ public:
     // AI driving
     // TODO
 
-    // Draw screen
-    DrawRotatedDecal(vCarPos * vCarSize, decCar.get() , fCarDirection, { 80, 54/2 }, { 1, 1 }, olc::WHITE);
 
     // print some data
     info = "POS:(" + std::to_string(int(vCarPos.x)) + "," + std::to_string(int(vCarPos.y)) +
-                                                  "),DIR:" + std::to_string(fCarDirection) +
+                                                  "),DIR:" + std::to_string(fCarDirection*57.2958).substr(0,6) +
                                              ",SPEED:" + std::to_string(int(fCarSpeedLin)) + 
                                            ",FPS:" + std::to_string(int(1/fElapsedTime));
 
     FillRect(0, ScreenHeight()-21, ScreenWidth(), 21, olc::BLACK);
 		DrawString(5, ScreenHeight()-17, info, olc::WHITE, 2);
-    
+
 		return true;
 	}
 };
