@@ -95,14 +95,15 @@ public:
     FillCircle(vCarPos.x, vCarPos.y, 2, olc::GREY); // car pivoting point
 
     // populate central car visibility lines
-    carLine0 = GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(500*cos(fCarDirection))),int(vCarPos.y+(500*sin(fCarDirection)))});
-    carLine1l= GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(500*cos(fCarDirection+0.3))),int(vCarPos.y+(500*sin(fCarDirection+0.3)))});
-    carLine1r = GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(500*cos(fCarDirection-0.3))),int(vCarPos.y+(500*sin(fCarDirection-0.3)))});
-    carLine2l = GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(500*cos(fCarDirection+0.6))),int(vCarPos.y+(500*sin(fCarDirection+0.6)))});
-    carLine2r = GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(500*cos(fCarDirection-0.6))),int(vCarPos.y+(500*sin(fCarDirection-0.6)))});
-    carLine3l = GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(500*cos(fCarDirection+0.9))),int(vCarPos.y+(500*sin(fCarDirection+0.9)))});
-    carLine3r = GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(500*cos(fCarDirection-0.9))),int(vCarPos.y+(500*sin(fCarDirection-0.9)))});
+    carLine0 = GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(900*cos(fCarDirection))),int(vCarPos.y+(900*sin(fCarDirection)))});
+    carLine1l= GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(900*cos(fCarDirection+0.3))),int(vCarPos.y+(900*sin(fCarDirection+0.3)))});
+    carLine1r = GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(900*cos(fCarDirection-0.3))),int(vCarPos.y+(900*sin(fCarDirection-0.3)))});
+    carLine2l = GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(900*cos(fCarDirection+0.6))),int(vCarPos.y+(900*sin(fCarDirection+0.6)))});
+    carLine2r = GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(900*cos(fCarDirection-0.6))),int(vCarPos.y+(900*sin(fCarDirection-0.6)))});
+    carLine3l = GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(900*cos(fCarDirection+0.9))),int(vCarPos.y+(900*sin(fCarDirection+0.9)))});
+    carLine3r = GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(900*cos(fCarDirection-0.9))),int(vCarPos.y+(900*sin(fCarDirection-0.9)))});
 
+    // plot car visibility lines
     if(1){
       for(auto i: carLine0)  {Draw(i, olc::GREY);}
       for(auto i: carLine1l) {Draw(i, olc::GREY);}
@@ -113,11 +114,21 @@ public:
       for(auto i: carLine3r) {Draw(i, olc::GREY);}
     }
 
+    // find closest car to curb distance along car visibility lines
+    int min_v=1E6;
     for(auto i: carLine0)
     {
       pCircuitPixel = sprCircuit->GetPixel(i.x,i.y); // read Circuit Sprite pixel colour
       if (pCircuitPixel.r != 255 | pCircuitPixel.g != 255 | pCircuitPixel.b != 255){
         FillCircle(i.x, i.y, 4, olc::RED);
+
+        // measure distance between i and vCarPos
+        int dist = sqrt(pow(i.x-vCarPos.x,2)+pow(i.y-vCarPos.y,2));
+        if (dist < min_v) 
+        {
+          min_v=dist;
+          std::cout << min_v << "\n";
+          }
       }
     }
     
