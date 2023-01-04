@@ -16,6 +16,13 @@ You give it a race circuit (as an PNG image) and you let the car learn how to dr
  
  https://github.com/OneLoneCoder/olcPixelGameEngine
  
+ ## How to feed the AI
+ In order for the AI to learn, it is necessay to feed information regarding the sorrounding as well as information regarding what it is considered good driving. Here is what the car sees when racing.
+ 
+ <p align="center">
+  <img src="https://github.com/fabriziotappero/Learn_To_Drive_CPP/blob/main/assets/car_visuals.png?raw=true" width = "50%" alt="" align=center/>
+</p>
+ 
  # Why I made this
  Essentially I wanted to improve my C++ skills by implementing an *articial intelligence* that can process images in real time using a *graphic game engine*. 
  If you actually want to implement stuff it is a good idea to find data to process, a game engine has indeed a ton of video data!
