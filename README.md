@@ -1,10 +1,8 @@
 
-# What is this? 
-A C++ implementation of an **artificial intelligence** that can drive at unbelievable speed on *any* given circuit!
-
 <p align="center">
   <img src="https://github.com/fabriziotappero/Learn_To_Drive_CPP/blob/main/assets/hero.png?raw=true" width = "100%" alt="" align=center/>
 </p>
+A C++ implementation of an **artificial intelligence** that can drive at unbelievable speed on *any* given circuit!
 
 # How to compile
 Install g++ (in Windows you can use MSYS2) and run:
