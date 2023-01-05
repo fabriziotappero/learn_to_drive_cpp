@@ -19,8 +19,11 @@ public:
 	std::unique_ptr<olc::Decal> decCar;
 
   // circuit parameters
-  olc::Pixel pCircuitPixel;
   olc::vi2d vCircuitSize = { 1000,1000 };
+  olc::Pixel pPickPixel;
+  olc::Pixel pTrackColor       = (255, 255, 255);  // RGB color of race track
+  olc::Pixel pCurbColor        = (42, 127, 255);   // RGB color of circuit curb
+  olc::Pixel pArrivalLineColor = (175, 207, 255);  // RGB color of arrival line
 
   // car parameters
   olc::vi2d vCarSize = { 1,1 };
@@ -32,8 +35,9 @@ public:
 
   // let us use several lines to define the car visibility of the circuit
   typedef struct CarLine {
-    std::vector<olc::vi2d> pnt; // line points
-    int CurbDistanceMin;        // minimum car to curb distance
+    std::vector<olc::vi2d> pnt;   // line points
+    int CurbDistanceMin;          // minimum car to curb distance
+    olc::vi2d curbInterectionPnt; // point where line intersect curb
   } CarLine;
   
   // text info
@@ -64,7 +68,6 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-
     // get some keyboard inputs
     if (1)
     {
@@ -127,7 +130,7 @@ public:
         for(auto i: carLines[ln].pnt) {Draw(i, olc::GREY);}
       }
     }
-  
+
     // find closest car to curb distance along car visibility line
     // do it for each line
     for(int ln=0; ln < numOfLines; ln++)
@@ -135,29 +138,37 @@ public:
       carLines[ln].CurbDistanceMin = 1E6;
       for(auto i: carLines[ln].pnt)
       {
-        pCircuitPixel = sprCircuit->GetPixel(i.x,i.y); // read Circuit Sprite pixel colour
-
-        if (pCircuitPixel.r != 255 | pCircuitPixel.g != 255 | pCircuitPixel.b != 255){
-          FillCircle(i.x, i.y, 1, olc::DARK_GREY);
+        pPickPixel = sprCircuit->GetPixel(i.x,i.y); // read Circuit Sprite pixel colour
+        if (pPickPixel.r > 10 & pPickPixel.r < 200){ // TODO implement a better color selection
+          // bingo! the car line appears to intersect with circuit curb
 
           // measure distance (along the line) between car and closest curb
           int dist = sqrt(pow(i.x-vCarPos.x,2)+pow(i.y-vCarPos.y,2));
           // find min distance value
-          if (dist < carLines[ln].CurbDistanceMin) 
+          if (dist < carLines[ln].CurbDistanceMin)
           {
-            carLines[ln].CurbDistanceMin=dist;
+            carLines[ln].CurbDistanceMin = dist; // store min distance
+            carLines[ln].curbInterectionPnt = i; // store point where curb distance is minimum
           }
         }
       }  
     }
 
-      // Allright we have here all the curb distance readings from the car
-      for(auto carLn: carLines){
-        std::cout << carLn.CurbDistanceMin << " ";
-        }
-      std::cout << "\n";
+    // Allright we have here all the curb distance readings from the car
+    for(auto carLn: carLines)
+    {
+      std::cout << carLn.CurbDistanceMin << " ";
+    }
+    std::cout << "\n";
 
-    // Build Reward method
+    // Let us print the point where the car see the curb
+    for(auto carLn: carLines)
+    {
+      FillCircle(carLn.curbInterectionPnt, 1, olc::RED);
+    }
+
+    // Build Reward method based on track arrival lines
+    
 
 
     // AI driving
@@ -166,14 +177,15 @@ public:
     // print some data
     info = "POS:(" + std::to_string(int(vCarPos.x)) + "," + std::to_string(int(vCarPos.y)) +
                                                   "),DIR:" + std::to_string(fCarDirection*57.2958).substr(0,6) +
-                                             ",SPEED:" + std::to_string(int(fCarSpeedLin)) + 
-                                           ",FPS:" + std::to_string(int(1/fElapsedTime));
+                                              ",SPEED:" + std::to_string(int(fCarSpeedLin)) + 
+                                            ",FPS:" + std::to_string(int(1/fElapsedTime)) +
+                                            ",DEBUG:" + std::to_string(int(sprCircuit->GetPixel(vCarPos.x,vCarPos.y).r))+" "+ std::to_string(int(sprCircuit->GetPixel(vCarPos.x,vCarPos.y).g))+" "+ std::to_string(int(sprCircuit->GetPixel(vCarPos.x,vCarPos.y).b));
 
     FillRect(0, ScreenHeight()-21, ScreenWidth(), 21, olc::BLACK);
-		DrawString(5, ScreenHeight()-17, info, olc::WHITE, 2);
+    DrawString(5, ScreenHeight()-17, info, olc::WHITE, 2);
 
-		return true;
-	}
+    return true;
+    }
 };
 
 int main()
