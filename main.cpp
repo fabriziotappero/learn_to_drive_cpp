@@ -32,12 +32,17 @@ public:
 	olc::vf2d vCarSpeed = olc::vf2d(0.0f, 0.0f);  // 2D car speed
   float fCarSpeedLin = 0.0f;                    // Linear car speed
   float fCarDirection = 0.0f;                   // Direction of the car
+  bool bCarHasHitCurb = false;                  // Car has hit the curb
+  bool bCarOverArrival = false;                 // Car has gone over arrival line
+
+  // artificial intelligence parameters
+  int CarReward = 0;                            // the better AI does the high CarReward gets
 
   // let us use several lines to define the car visibility of the circuit
   typedef struct CarLine {
-    std::vector<olc::vi2d> pnt;   // line points
-    int CurbDistanceMin;          // minimum car to curb distance
-    olc::vi2d curbInterectionPnt; // point where line intersect curb
+    std::vector<olc::vi2d> pnt;    // line points
+    int CurbDistanceMin;           // minimum car to curb distance
+    olc::vi2d curbIntersectionPnt; // point where line intersect curb
   } CarLine;
   
   // text info
@@ -63,6 +68,10 @@ public:
 
     //Clear(olc::WHITE);
     //SetPixelMode(olc::Pixel::MASK); // Draw all pixels
+
+    // let's instantiate an AI
+    Ai my_ai;
+
 		return true;
 	}
 
@@ -148,13 +157,13 @@ public:
           if (dist < carLines[ln].CurbDistanceMin)
           {
             carLines[ln].CurbDistanceMin = dist; // store min distance
-            carLines[ln].curbInterectionPnt = i; // store point where curb distance is minimum
+            carLines[ln].curbIntersectionPnt = i; // store point where curb distance is minimum
           }
         }
       }  
     }
 
-    // Allright we have here all the curb distance readings from the car
+    // Alright we have here all the curb distance readings from the car
     for(auto carLn: carLines)
     {
       std::cout << carLn.CurbDistanceMin << " ";
@@ -164,15 +173,26 @@ public:
     // Let us print the point where the car see the curb
     for(auto carLn: carLines)
     {
-      FillCircle(carLn.curbInterectionPnt, 1, olc::RED);
+      FillCircle(carLn.curbIntersectionPnt, 1, olc::RED);
     }
 
-    // Build Reward method based on track arrival lines
+    // Build Reward method based on track arrival lines and circuit curbs
+
+    // CAR OVER CURB 
+    pPickPixel = sprCircuit->GetPixel(vCarPos.x, vCarPos.y);
+    if(pPickPixel.r == 42 && pPickPixel.g == 127 && pPickPixel.b == 255 )
+      bCarHasHitCurb = true; // car has gone over the curb
+    else
+      bCarHasHitCurb = false;
     
+    // CAR OVER ARRIVAL LINE
+    if(pPickPixel.r == 255 && pPickPixel.g == 246 && pPickPixel.b == 241 )
+      bCarOverArrival = true; // car has gone over arrival line
+    else
+      bCarOverArrival = false;
 
-
-    // AI driving
-    // TODO
+    // let allow AI to drive
+    my_ai.update(bCarOverArrival, bCarHasHitCurb, &vCarSpeed, &vCarDir)
 
     // print some data
     info = "POS:(" + std::to_string(int(vCarPos.x)) + "," + std::to_string(int(vCarPos.y)) +
