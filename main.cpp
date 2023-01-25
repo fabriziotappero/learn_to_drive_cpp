@@ -4,6 +4,7 @@
 //#define OLC_IMAGE_STB
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
+#include "ai.h"
 
 // given two (x,y) points returns vector of (x,y) points of the line that connects those points 
 std::vector<olc::vi2d> GetLinePoints(const olc::vi2d pos1, const olc::vi2d pos2);
@@ -27,7 +28,8 @@ public:
 
   // car parameters
   olc::vi2d vCarSize = { 1,1 };
-  olc::vf2d vCarPos = { 210,100 };              // 2D car position
+  olc::vf2d vCarPosOrigin = { 210,100 };  
+  olc::vf2d vCarPos = vCarPosOrigin;            // 2D car position
   olc::vf2d vCarDir   = olc::vf2d(0.0f, 0.0f);  // 2D car direction
 	olc::vf2d vCarSpeed = olc::vf2d(0.0f, 0.0f);  // 2D car speed
   float fCarSpeedLin = 0.0f;                    // Linear car speed
@@ -44,6 +46,9 @@ public:
     int CurbDistanceMin;           // minimum car to curb distance
     olc::vi2d curbIntersectionPnt; // point where line intersect curb
   } CarLine;
+
+    // let's instantiate an AI
+    Ai my_ai;
   
   // text info
   std::string info = "";
@@ -69,9 +74,6 @@ public:
     //Clear(olc::WHITE);
     //SetPixelMode(olc::Pixel::MASK); // Draw all pixels
 
-    // let's instantiate an AI
-    Ai my_ai;
-
 		return true;
 	}
 
@@ -95,9 +97,20 @@ public:
       }
     }
 
-    // Update car physics
-    vCarSpeed = { fCarSpeedLin * cos(fCarDirection), fCarSpeedLin * sin(fCarDirection) }; // Convert linear speed to 2D speed
-    vCarPos += vCarSpeed * fElapsedTime;
+    // Update car physics according to race logic
+    if (bCarHasHitCurb == true)
+    {
+      // Start new race
+      fCarSpeedLin = 0.0f;
+      fCarDirection = 0.0f; 
+      vCarPos = vCarPosOrigin;
+    }
+    else
+    {
+      // Make car move
+      vCarSpeed = { fCarSpeedLin * cos(fCarDirection), fCarSpeedLin * sin(fCarDirection) }; // Convert linear speed to 2D speed
+      vCarPos += vCarSpeed * fElapsedTime;
+    }
 
     // Draw car
     DrawRotatedDecal(vCarPos * vCarSize, decCar.get() , fCarDirection, { 80, 54/2 }, { 1, 1 }, olc::WHITE);
@@ -114,30 +127,23 @@ public:
     FillCircle(vCarPos.x, vCarPos.y, 2, olc::GREY);
 
     // let us create several car visibility lines
-    // ########### CHANGE HERE THE NUMBER OF THE CAR LINES ##########
-    std::array<CarLine,13> carLines;
+    std::array<CarLine,13> carLines;  // here we have 13 lines, equaly spaced all around the car.
     int numOfLines = carLines.size();
-
-    //std::cout << numOfLines << "\n";
-
     // populates all car visibility lines with points
     float stepAngle = 0.0f;
     for(int i=0; i < numOfLines; i++)
     {
-      // ########### CHANGE HERE THE LENGTH OF THE CAR LINES ##########
-      int lineLength = 500;
+      int lineLength = 500; // lenght of the the car lines
       float LinesAngle = (2 * 3.14159265358979323846) / numOfLines ; // angle between lines
-      //  stepAngle = from 0 to LinesAngle
+      //  stepAngle goes from 0 to LinesAngle
       stepAngle += LinesAngle;
       carLines[i].pnt = GetLinePoints({int(vCarPos.x),int(vCarPos.y)},{int(vCarPos.x+(lineLength*cos(fCarDirection+stepAngle))),int(vCarPos.y+(lineLength*sin(fCarDirection+stepAngle)))});
     }
 
-    // plot car visibility lines
+    // DEBUG plot car visibility lines
     if(0){
       for(int ln=0; ln < numOfLines; ln++)
-      {
         for(auto i: carLines[ln].pnt) {Draw(i, olc::GREY);}
-      }
     }
 
     // find closest car to curb distance along car visibility line
@@ -163,43 +169,49 @@ public:
       }  
     }
 
-    // Alright we have here all the curb distance readings from the car
-    for(auto carLn: carLines)
-    {
-      std::cout << carLn.CurbDistanceMin << " ";
-    }
-    std::cout << "\n";
-
-    // Let us print the point where the car see the curb
-    for(auto carLn: carLines)
-    {
-      FillCircle(carLn.curbIntersectionPnt, 1, olc::RED);
+    // DEBUG. let's plot the curb distance readings from the car
+    if (0){
+      for(auto carLn: carLines){
+        std::cout << carLn.CurbDistanceMin << " ";
+        FillCircle(carLn.curbIntersectionPnt, 1, olc::RED); // plot the exact point
+      }
+      std::cout << "\n";
     }
 
-    // Build Reward method based on track arrival lines and circuit curbs
-
-    // CAR OVER CURB 
+    // Detect CAR OVER CURB 
     pPickPixel = sprCircuit->GetPixel(vCarPos.x, vCarPos.y);
     if(pPickPixel.r == 42 && pPickPixel.g == 127 && pPickPixel.b == 255 )
       bCarHasHitCurb = true; // car has gone over the curb
     else
       bCarHasHitCurb = false;
     
-    // CAR OVER ARRIVAL LINE
+    // Detect CAR OVER ARRIVAL LINE
     if(pPickPixel.r == 255 && pPickPixel.g == 246 && pPickPixel.b == 241 )
       bCarOverArrival = true; // car has gone over arrival line
     else
       bCarOverArrival = false;
 
-    // let allow AI to drive
-    my_ai.update(bCarOverArrival, bCarHasHitCurb, &vCarSpeed, &vCarDir)
 
+    // let the AI to drive the car
+    if(1)
+    {
+      // let's extract all 13 Curb Distances in an array
+      std::array<int, 13> CurbDistances;
+      int i=0;
+      for(auto carLn: carLines)
+        CurbDistances[i++] = carLn.CurbDistanceMin;
+      // update out AI
+      my_ai.update(CurbDistances, bCarOverArrival, bCarHasHitCurb, fCarSpeedLin, fCarDirection);
+    }
+    
     // print some data
     info = "POS:(" + std::to_string(int(vCarPos.x)) + "," + std::to_string(int(vCarPos.y)) +
-                                                  "),DIR:" + std::to_string(fCarDirection*57.2958).substr(0,6) +
-                                              ",SPEED:" + std::to_string(int(fCarSpeedLin)) + 
-                                            ",FPS:" + std::to_string(int(1/fElapsedTime)) +
-                                            ",DEBUG:" + std::to_string(int(sprCircuit->GetPixel(vCarPos.x,vCarPos.y).r))+" "+ std::to_string(int(sprCircuit->GetPixel(vCarPos.x,vCarPos.y).g))+" "+ std::to_string(int(sprCircuit->GetPixel(vCarPos.x,vCarPos.y).b));
+                              "),DIR:" + std::to_string(fCarDirection*57.2958).substr(0,6) +
+                                             ",SPEED:" + std::to_string(int(fCarSpeedLin)) + 
+                                             ",FPS:" + std::to_string(int(1/fElapsedTime)) +
+               ",DEBUG:" + std::to_string(int(sprCircuit->GetPixel(vCarPos.x,vCarPos.y).r))+
+                      " "+ std::to_string(int(sprCircuit->GetPixel(vCarPos.x,vCarPos.y).g))+
+                      " "+ std::to_string(int(sprCircuit->GetPixel(vCarPos.x,vCarPos.y).b));
 
     FillRect(0, ScreenHeight()-21, ScreenWidth(), 21, olc::BLACK);
     DrawString(5, ScreenHeight()-17, info, olc::WHITE, 2);
