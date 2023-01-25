@@ -4,10 +4,10 @@ class Ai
 {
 private:
     
-public:
+public: 
     Ai();
     ~Ai();
-    void update(std::array<int,13> CurbDist, bool bCarOverArrival, bool bCarHasHitCurb, float fCarSpeedLin, float fCarDirection);
+    void update(std::array<int,13> CurbDist, float fCarTravelledDist, bool bCarHasHitCurb, float fCarSpeedLin, float fCarDirection);
 };
 
 Ai::Ai()
@@ -19,13 +19,12 @@ Ai::~Ai()
 }
 
 
-void Ai::update(std::array<int,13> CurbDist, bool bCarOverArrival, bool bCarHasHitCurb, float fCarSpeedLin, float fCarDirection)
+void Ai::update(std::array<int,13> CurbDist, float fCarTravelledDist, bool bCarHasHitCurb, float fCarSpeedLin, float fCarDirection)
 {
-    if(0){ // DEBUG
+    if(1){ // DEBUG
         for(auto el: CurbDist)
             std::cout << el << " ";
-        std::cout << "\n";
-        std::cout << fCarDirection << ", " << fCarSpeedLin << "\n";
+        std::cout << "\t\tDirection:" << fCarDirection << "\tSpeed:" << fCarSpeedLin << "\tTravelled Distance:" << fCarTravelledDist << "\n";
     }
     
 

@@ -3,7 +3,7 @@
 
 //#define OLC_IMAGE_STB
 #define OLC_PGE_APPLICATION
-#include "olcPixelGameEngine.h"
+#include "olcPixelGameEngine.h" 
 #include "ai.h"
 
 // given two (x,y) points returns vector of (x,y) points of the line that connects those points 
@@ -34,6 +34,7 @@ public:
 	olc::vf2d vCarSpeed = olc::vf2d(0.0f, 0.0f);  // 2D car speed
   float fCarSpeedLin = 0.0f;                    // Linear car speed
   float fCarDirection = 0.0f;                   // Direction of the car
+  float fCarTravelledDist = 0.0f;               // Distance travelled by the car since the start
   bool bCarHasHitCurb = false;                  // Car has hit the curb
   bool bCarOverArrival = false;                 // Car has gone over arrival line
 
@@ -79,8 +80,7 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-    // get some keyboard inputs
-    if (1)
+    if (1) // get some keyboard inputs
     {
       // change car direction and speed linearly
       if (GetKey(olc::Key::LEFT).bHeld) fCarDirection  +=  1.1f * fElapsedTime;
@@ -103,6 +103,7 @@ public:
       // Start new race
       fCarSpeedLin = 0.0f;
       fCarDirection = 0.0f; 
+      fCarTravelledDist = 0.0f;
       vCarPos = vCarPosOrigin;
     }
     else
@@ -110,6 +111,7 @@ public:
       // Make car move
       vCarSpeed = { fCarSpeedLin * cos(fCarDirection), fCarSpeedLin * sin(fCarDirection) }; // Convert linear speed to 2D speed
       vCarPos += vCarSpeed * fElapsedTime;
+      fCarTravelledDist += fCarSpeedLin * fElapsedTime;
     }
 
     // Draw car
@@ -201,7 +203,7 @@ public:
       for(auto carLn: carLines)
         CurbDistances[i++] = carLn.CurbDistanceMin;
       // update out AI
-      my_ai.update(CurbDistances, bCarOverArrival, bCarHasHitCurb, fCarSpeedLin, fCarDirection);
+      my_ai.update(CurbDistances, fCarTravelledDist, bCarHasHitCurb, fCarSpeedLin, fCarDirection);
     }
     
     // print some data
