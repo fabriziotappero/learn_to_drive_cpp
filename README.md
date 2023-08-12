@@ -35,7 +35,7 @@ You give it a race circuit (as an PNG prite) and you let the car learn how to dr
  - How to structure a series of C++ classes and functions so that you can integrate a well established software tool (in this case the Game Engine tool) 
  in your own development. This is a particular important skill since a lot of coding that you end up doing is via the use of tools, API or software that 
  others have built.
- - How to implement from scratch an AI in C++. Learn the ins and outs of reinforced learning and the importance of input data.
+ - How to implement from scratch an AI in C++. Learn the ins and outs of reinforced learning and the importance of input data (not implemented yet).
  - How to deal with C++ Standard Library tools instead of writing up your own.
  
  
